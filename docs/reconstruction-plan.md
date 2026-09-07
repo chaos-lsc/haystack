@@ -1,6 +1,6 @@
 # Trust RAG 重构与增量评测方案
 
-状态：用户已确认进入实现。本地已检出 Haystack v3.1.1，已创建 chaos-lsc/haystack fork；应用评测进行中，真实 Linux 资源验收尚未完成。
+状态：本次已完成补齐语料后的 B0 开发集评测，109/208（52.40%）。用户随后明确要求 baseline 完成即结束，后续开发须先重新明确边界；B1–B4、测试集和部署已暂停。Haystack fork 已创建，真实 Linux 资源验收尚未完成。详见 session-boundary.md。
 
 ## 目标与开发边界
 
