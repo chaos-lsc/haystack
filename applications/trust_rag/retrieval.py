@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 
 from qdrant_client import QdrantClient, models
+from qdrant_client.http.exceptions import ResponseHandlingException
 
 from haystack import Document, component
 from haystack.components.retrievers.in_memory import InMemoryEmbeddingRetriever
@@ -91,6 +92,35 @@ def build_embeddings(settings: Settings, provider: Provider, workers: int = 4, l
     return {k: v for k, v in result.items() if k != "events"}
 
 
+def upsert_points(client, collection: str, points: list):
+    for attempt in range(3):
+        try:
+            return client.upsert(collection, points, wait=True)
+        except ResponseHandlingException:
+            if attempt == 2:
+                raise
+            # Deterministic IDs make replay safe even when only the acknowledgement was lost.
+            time.sleep(2**attempt)
+
+
+def wait_for_optimization(client, collection: str, timeout: float = 1200) -> dict:
+    deadline, stable = time.monotonic() + timeout, 0
+    while time.monotonic() < deadline:
+        info = client.get_collection(collection)
+        if info.optimizer_status != "ok":
+            raise ValueError("Qdrant optimizer reported an error")
+        stable = stable + 1 if info.status == models.CollectionStatus.GREEN else 0
+        if stable >= 3:
+            return {
+                "status": info.status.value,
+                "indexed_vectors_count": info.indexed_vectors_count,
+                "points_count": info.points_count,
+                "segments_count": info.segments_count,
+            }
+        time.sleep(2)
+    raise TimeoutError("Qdrant optimization did not settle before the maintenance deadline")
+
+
 def build_qdrant(settings: Settings, provider: Provider, limit: int | None = None) -> dict:
     client, name = client_for(settings), collection_name(settings, provider)
     try:
@@ -120,14 +150,21 @@ def build_qdrant(settings: Settings, provider: Provider, limit: int | None = Non
                 )
                 for doc, vector in zip(batch, vectors, strict=True)
             ]
-            client.upsert(name, points, wait=True)
+            upsert_points(client, name, points)
             count += len(points)
             if count % 2048 == 0:
                 print(json.dumps({"qdrant_points": count}), flush=True)
         actual = client.count(name, exact=True).count
         if actual != count:
             raise ValueError(f"Unexpected Qdrant point count {actual}, expected {count}")
-        result = {"collection": name, "count": count, "partial": limit is not None, "local_mode": settings.qdrant_local}
+        optimization = wait_for_optimization(client, name)
+        result = {
+            "collection": name,
+            "count": count,
+            "partial": limit is not None,
+            "local_mode": settings.qdrant_local,
+            "optimization": optimization,
+        }
         (settings.root / "qdrant-build.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
         return result
     finally:

@@ -69,3 +69,27 @@ def test_provider_rejects_partial_embedding_response(corpus, monkeypatch):
     )
     with pytest.raises(ProviderError, match="indices"):
         provider.embed(["one", "two"])
+
+
+def test_qdrant_lost_acknowledgement_replays_same_points(monkeypatch):
+    from qdrant_client.http.exceptions import ResponseHandlingException
+
+    from applications.trust_rag.retrieval import upsert_points
+
+    class LostAcknowledgement:
+        def __init__(self):
+            self.points = {}
+            self.calls = 0
+
+        def upsert(self, collection, points, wait):
+            self.calls += 1
+            self.points.update({point.id: point for point in points})
+            if self.calls == 1:
+                raise ResponseHandlingException(TimeoutError())
+            return "acknowledged"
+
+    monkeypatch.setattr("applications.trust_rag.retrieval.time.sleep", lambda _: None)
+    client = LostAcknowledgement()
+    point = SimpleNamespace(id="stable-id", vector=[1.0])
+    assert upsert_points(client, "collection", [point]) == "acknowledged"
+    assert list(client.points) == ["stable-id"]

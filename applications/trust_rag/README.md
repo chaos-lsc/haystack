@@ -63,6 +63,8 @@ hatch -e trust-rag run lab compare applications/trust_rag/outputs/dev-b0 applica
 
 检索候选数、最终上下文预算和基础生成提示词保持一致。B3 只能查询本轮已经发现的 doc_id；二元运算要求两个明确且不同的单元格，集合运算不允许截断后求和。B4 的 API 检查属于被测能力，不作为评测真值。
 
+Qdrant 导入按固定 ID 重放瞬时连接失败，并等待优化状态连续正常后才完成。比较查询性能前应确认后台优化已经结束；[Qdrant 优化器说明](https://qdrant.tech/documentation/operations/optimizer/)解释了建索引与查询资源竞争的影响。
+
 消融示例：`evaluate --stage B4 --without tables --split dev --output ...`。`--without` 可重复，用于关闭 `bm25`、`tables` 或 `verifier`。最终组件选择先在开发集完成。
 
 ```sh
