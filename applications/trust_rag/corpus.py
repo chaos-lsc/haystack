@@ -12,7 +12,7 @@ import jieba
 
 from haystack import Document
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 CHUNK_CHARS = 1800
 CHUNK_OVERLAP = 160
 
@@ -53,6 +53,8 @@ def build_corpus(source: Path, target: Path) -> dict:
     if target.exists() and manifest_path.exists():
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         if manifest["source_sha256"] == source_hash and manifest["schema"] == SCHEMA_VERSION:
+            if file_hash(target) != manifest["sqlite_sha256"]:
+                raise ValueError("Existing corpus does not match its frozen manifest")
             return manifest
         raise ValueError("Corpus exists with a different source/schema; choose a new data directory")
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -88,6 +90,7 @@ def build_corpus(source: Path, target: Path) -> dict:
                     "doc_id": record["doc_id"],
                     "evidence_id": record["evidence_id"],
                     "source_title": title,
+                    "parent_source_title": original.get("source_title") or title,
                     "file_name": filename,
                     "location": location,
                     "page": original.get("page_number"),

@@ -19,6 +19,16 @@ def test_corpus_keeps_table_sources_and_excludes_eval_metadata(corpus):
     assert docs[0].meta["location"]["cell"] == "C5"
 
 
+def test_corpus_reuse_rejects_changed_sqlite(corpus):
+    from applications.trust_rag.corpus import build_corpus, connect
+
+    target = corpus.root / "corpus.sqlite"
+    with connect(target) as db:
+        db.execute("UPDATE evidence SET content='tampered'")
+    with pytest.raises(ValueError, match="frozen manifest"):
+        build_corpus(corpus.root / "source.jsonl", target)
+
+
 def test_table_queries_cannot_escape_current_turn_or_inject_sql(corpus):
     with pytest.raises(ValueError, match="scope"):
         select_slot(corpus, {"doc_id": "doc1", "cell": "C5"}, {"other"})

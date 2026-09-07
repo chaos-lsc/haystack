@@ -37,6 +37,10 @@ hatch -e trust-rag run lab --env-file /path/to/local.env embed --workers 4
 
 ## Qdrant 与实验
 
+旧 `full_no_legacy_doc` 索引不包含 `.doc`。完整实验先用本机 Word 的只读导出工具 `tools/export_legacy_word.ps1` 导出原始 `.doc`，再通过 `hatch -e trust-rag run python -m applications.trust_rag.tools.merge_sources --evidence OLD_EVIDENCE --legacy-word EXPORT_DIR --output NEW_EVIDENCE` 合并；合并工具不会读取 QA 工作簿或答案。随后对所有阶段统一执行 `prepare`。在线服务无需安装 Word，Linux 导入从归一化 Evidence 开始；原始 Office 解析属于本地离线预处理。保留原始文件及导出哈希可追溯转换。
+
+语料元数据同时保留附件标题和母文件标题，来源命中指标接受两种真实来源名称。新快照应使用新的 `data_dir`，旧实验保留；向量缓存可通过关闭所有读写进程后的 SQLite 文件副本复用。
+
 从 Qdrant 官方 v1.19.1 release 安装本机架构对应二进制，核实校验值；在仓库根启动：
 
 ```sh

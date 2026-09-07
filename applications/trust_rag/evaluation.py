@@ -68,7 +68,15 @@ def reference_metrics(case: dict, docs: list[dict]) -> dict:
     refs = case.get("expected_evidence_refs", [])
     source_hits, position_hits, locatable = [], [], []
     for ref in refs:
-        matching = [d for d in docs if normalize(d["meta"].get("source_title", "")) == normalize(ref["source_title"])]
+        matching = [
+            d
+            for d in docs
+            if normalize(ref["source_title"])
+            in {
+                normalize(d["meta"].get("source_title", "")),
+                normalize(d["meta"].get("parent_source_title", "")),
+            }
+        ]
         source_hits.append(bool(matching))
         fields = {k: ref[k] for k in ("sheet", "cell", "page") if ref.get(k) is not None and str(ref[k]).strip()}
         if fields:

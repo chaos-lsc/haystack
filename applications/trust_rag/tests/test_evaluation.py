@@ -27,6 +27,22 @@ def test_error_diagnostics_preserve_categories_without_exception_payloads():
     assert error_diagnostics(outer) == [{"type": "RuntimeError"}, {"type": "ValueError"}]
 
 
+def test_source_metric_recognizes_parent_title_without_inventing_position_hits():
+    from applications.trust_rag.evaluation import reference_metrics
+
+    case = {"expected_evidence_refs": [{"source_title": "资本管理办法", "cell": "C5"}]}
+    docs = [
+        {
+            "meta": {
+                "source_title": "附件：风险权重表",
+                "parent_source_title": "资本管理办法",
+                "location": {"cell": "B2"},
+            }
+        }
+    ]
+    assert reference_metrics(case, docs) == {"source_hit": True, "position_hit": False}
+
+
 def test_test_set_rejects_changed_configuration_before_any_api(corpus, monkeypatch):
     split_dir = corpus.root / "splits"
     split_dir.mkdir()
