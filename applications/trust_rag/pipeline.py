@@ -1,6 +1,7 @@
 """B0–B4 share the same generation contract and differ by explicit switches."""
 
 import json
+import re
 import time
 from dataclasses import asdict, dataclass
 
@@ -95,9 +96,31 @@ def citation_errors(answer: dict, documents: list[Document]) -> list[str]:
         doc = by_id.get(citation["evidence_id"])
         if doc is None:
             errors.append("citation outside current-turn evidence")
-        elif len(citation["quote"].strip()) < 4 or citation["quote"] not in doc.content:
+        elif not quote_matches(citation["quote"], doc.content or ""):
             errors.append("citation is not a substantive exact quote")
     return errors
+
+
+def quote_matches(quote: str, content: str) -> bool:
+    def canonical(text):
+        # Ignore Office layout whitespace, but never join separate numbers or Latin words.
+        parts = re.split(r"(\s+)", text)
+        return "".join(
+            part
+            if not part.isspace()
+            else (
+                " "
+                if i > 0
+                and i + 1 < len(parts)
+                and re.search(r"[A-Za-z0-9]$", parts[i - 1])
+                and re.match(r"[A-Za-z0-9]", parts[i + 1])
+                else ""
+            )
+            for i, part in enumerate(parts)
+        )
+
+    needle = canonical(quote)
+    return len(needle) >= 4 and needle in canonical(content)
 
 
 @component
@@ -183,12 +206,13 @@ class RAG:
         self.provider.local.events = []
         output = self.pipeline.run(
             {name: {"query": query} for name in ("embed", "select", "table", "generate", "verify")},
-            include_outputs_from={"select"},
+            include_outputs_from={"select", "table"},
         )
         result = output["verify"]["result"]
         result["seconds"] = time.perf_counter() - start
         result["variant"] = asdict(self.variant)
         result["api_events"] = list(self.provider.local.events)
+        result["table_diagnostics"] = output["table"]["diagnostics"]
         result["retrieval_seconds"] = output["select"]["retrieval_seconds"]
         result["retrieved_documents"] = [{"id": d.id, "meta": d.meta} for d in output["select"]["documents"]]
         return result

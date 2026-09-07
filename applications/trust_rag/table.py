@@ -18,6 +18,7 @@ PLAN_PROMPT = """你是表格查询规划器。输入问题和本轮已检索证
 "operations":[{"op":"sum|difference|ratio|percentage_change|min|max|argmin|argmax","slots":["a","b"]}]}。
 每个slot至少填写一个选择条件；所有非空条件相与。不要把机构名称误当指标。
 difference=a-b，ratio=a/b，percentage_change=(b-a)/a*100，二元运算要求各slot唯一单元格。
+difference 的槽顺序是[被减数,减数]；描述从旧值到新值的变化量时应排列为[新值,旧值]，增长率的槽顺序则为[旧值,新值]。
 需要分别查询的期间或对象必须分别声明slot。仅输出计划，不输出答案。
 """
 

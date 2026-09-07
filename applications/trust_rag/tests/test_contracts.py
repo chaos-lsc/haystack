@@ -29,6 +29,14 @@ def test_corpus_reuse_rejects_changed_sqlite(corpus):
         build_corpus(corpus.root / "source.jsonl", target)
 
 
+def test_citation_allows_office_layout_but_not_changed_words_or_joined_numbers():
+    from applications.trust_rag.pipeline import quote_matches
+
+    assert quote_matches("第二条 公司不吸收公众存款。", "第二条\u3000公司不吸收\n公众存款。")
+    assert not quote_matches("第二条 公司吸收公众存款。", "第二条 公司不吸收公众存款。")
+    assert not quote_matches("数值为1234", "数值为12\t34")
+
+
 def test_table_queries_cannot_escape_current_turn_or_inject_sql(corpus):
     with pytest.raises(ValueError, match="scope"):
         select_slot(corpus, {"doc_id": "doc1", "cell": "C5"}, {"other"})
