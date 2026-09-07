@@ -176,3 +176,11 @@ haystack/json-schemas
 
 # uv
 uv.lock
+
+# Trust RAG local datasets, credentials, tools and experiment artifacts
+/.tools/
+/.lab-data/
+/applications/trust_rag/.env
+/applications/trust_rag/outputs/
+/applications/trust_rag/runtime/
+/.qdrant-initialized

@@ -1,0 +1,16 @@
+[Unit]
+Description=Trust RAG Qdrant server
+After=network-online.target
+
+[Service]
+Type=simple
+User=trust-rag
+WorkingDirectory=/opt/trust-rag
+ExecStart=/opt/qdrant/qdrant --config-path /opt/trust-rag/applications/trust_rag/deploy/qdrant.yaml
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

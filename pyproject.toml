@@ -82,6 +82,29 @@ fmt = "ruff check --fix {args}; ruff format {args}"
 fmt-check = "ruff check {args} && ruff format --check {args}"
 docs = "haystack-pydoc pydoc tmp_api_reference"
 
+[tool.hatch.envs.trust-rag]
+python = "3.12"
+installer = "pip"
+dependencies = [
+  "qdrant-client==1.19.0",
+  "jieba==0.42.1",
+  "fastapi>=0.115,<1",
+  "uvicorn>=0.30,<1",
+  "python-dotenv>=1,<2",
+  "psutil>=6,<8",
+  "pytest>=8,<10",
+  "ruff>=0.12",
+]
+
+[tool.hatch.envs.trust-rag.env-vars]
+HAYSTACK_TELEMETRY_ENABLED = "false"
+PYTHONUTF8 = "1"
+
+[tool.hatch.envs.trust-rag.scripts]
+lab = "python -m applications.trust_rag {args}"
+test = "pytest -c applications/trust_rag/pytest.ini applications/trust_rag/tests {args}"
+lint = "ruff check --config applications/trust_rag/ruff.toml applications/trust_rag"
+
 [tool.hatch.envs.test]
 
 # we override dependencies from the default environment

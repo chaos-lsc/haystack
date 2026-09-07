@@ -1,0 +1,10 @@
+{
+  "data_dir": ".lab-data",
+  "api_base": "https://api.siliconflow.cn/v1",
+  "generation_model": "Qwen/Qwen3.5-9B",
+  "embedding_model": "Qwen/Qwen3-Embedding-0.6B",
+  "top_k": 12,
+  "candidate_k": 32,
+  "qdrant_url": "http://127.0.0.1:6333",
+  "qdrant_local": false
+}

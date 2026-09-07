@@ -1,0 +1,12 @@
+---
+features:
+  - |
+    Add the ``applications/trust_rag`` experiment application with an in-memory
+    embedding baseline and incremental Qdrant, Chinese BM25, exact table-query,
+    and answer-verification components. Include grouped evaluation splits,
+    per-case comparisons, API usage accounting, and bare-metal service templates.
+issues:
+  - |
+    Whole-machine 2 GiB RAM plus 2 GiB swap acceptance requires measurement on
+    the target Linux host. Local Windows measurements and offline pipeline
+    tests do not establish that resource target or an answer-quality gain.

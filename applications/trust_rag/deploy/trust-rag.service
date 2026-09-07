@@ -1,0 +1,19 @@
+[Unit]
+Description=Trust RAG question answering
+After=network-online.target qdrant.service
+Requires=qdrant.service
+
+[Service]
+Type=simple
+User=trust-rag
+WorkingDirectory=/opt/trust-rag
+EnvironmentFile=/etc/trust-rag.env
+Environment=HAYSTACK_TELEMETRY_ENABLED=false
+ExecStart=/usr/local/bin/hatch -e trust-rag run lab --config /etc/trust-rag.json serve --stage B4 --host 127.0.0.1
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

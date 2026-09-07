@@ -1,0 +1,15 @@
+log_level: WARN
+telemetry_disabled: true
+storage:
+  storage_path: .lab-data/qdrant-storage
+  snapshots_path: .lab-data/qdrant-snapshots
+  on_disk_payload: true
+  performance:
+    max_search_threads: 2
+    max_optimization_threads: 1
+  optimizers:
+    max_optimization_threads: 1
+service:
+  host: 127.0.0.1
+  http_port: 6333
+  grpc_port: 6334
